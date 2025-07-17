@@ -48,11 +48,8 @@ const Dashboard = () => {
                         role =='CUSTOMER' &&
                         (
                             <>
-                                <li><NavLink to="/dashboard/myProfile">My Profile</NavLink></li>
                                 <li><NavLink to="/dashboard/bookParcel">Book a parcel</NavLink></li>
                                 <li><NavLink to="/dashboard/myParcels">My Parcels</NavLink></li>
-                                <li><NavLink to="/dashboard/paymentHistory">Payment History</NavLink></li>
-                                
                             </>
                         )
                     }
@@ -61,7 +58,6 @@ const Dashboard = () => {
                         (
                             <>
                                 <li><NavLink to="/dashboard/myDeliveryList">My Delivery List</NavLink></li>
-                                <li><NavLink to="/dashboard/myReviews">My Reviews</NavLink></li>
                             </>
                         )
                     }
@@ -69,11 +65,8 @@ const Dashboard = () => {
                         role ==='ADMIN'&&
                         (
                             <>
-                                 <li><NavLink to="/dashboard/statistics">Statistics</NavLink></li>
                                 <li><NavLink to="/dashboard/allParcels">All Parcels</NavLink></li>
-                                <li><NavLink to="/dashboard/allUser">All Users</NavLink></li>
-                                <li><NavLink to="/dashboard/allDeliveryMen">All Delivery Men</NavLink></li>
-                               
+                                <li><NavLink to="/dashboard/allUser">All Users</NavLink></li>   
                             </>
                         )
                     }
@@ -81,7 +74,6 @@ const Dashboard = () => {
                     <li><Link to="/">Home</Link></li>
                 </ul>
             </div>
-            {/* dashboard content */}
             <div className='flex-1 p-8'>
                 <Outlet></Outlet>
             </div>
