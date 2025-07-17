@@ -5,6 +5,12 @@ import Home from "../Pages/Home/Home";
 import Login from "../Pages/Login/Login";
 import Register from "../Pages/Register/Register";
 import PrivateRoute from "./PrivateRoute";
+import Dashboard from "../Layout/Dashboard";
+import AllUsers from "../Pages/Dashboard/AllUser/AllUsers";
+import AllParcels from "../Pages/Dashboard/AllParcels/AllParcels";
+import MyDeliveryList from "../Pages/Dashboard/MyDeliveryList/MyDeliveryList";
+import MyParcels from "../Pages/Dashboard/MyParcels/MyParcels";
+import BookAParcel from "../Pages/Dashboard/BookParcel/BookParcel";
 
 export const router = createBrowserRouter([
     {
@@ -57,4 +63,3 @@ export const router = createBrowserRouter([
       ]
     }
   ]);
-  

@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import useAxiosPublic from '../hook/useAxiosPublic';
 import useAuth from '../hook/useAuth';
 import { useQuery } from '@tanstack/react-query';
@@ -9,6 +9,7 @@ const Dashboard = () => {
     const axiosPublic=useAxiosPublic();
     const {user, loading }=useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
     
     console.log('user user',user?.email);
 
@@ -26,15 +27,17 @@ const Dashboard = () => {
 
     const role = loggedUser?.role;
 
-    useEffect(() => {
-        if (role === 'admin') {
-            navigate('/dashboard/statistics');
-        } else if (role === 'deliveryMen') {
-            navigate('/dashboard/myDeliveryList');
-        } else if (role === 'user') {
-            navigate('/dashboard/myProfile');
-        }
-    }, [role, navigate]);
+   useEffect(() => {
+  if (location.pathname === '/dashboard') {
+    if (role === 'ADMIN') {
+      navigate('/dashboard/allParcels');
+    } else if (role === 'AGENT') {
+      navigate('/dashboard/myDeliveryList');
+    } else if (role === 'CUSTOMER') {
+      navigate('/dashboard/bookParcel');
+    }
+  }
+}, [role, navigate, location.pathname]);
 
     if(loading){
         return <p>Loading....</p>
