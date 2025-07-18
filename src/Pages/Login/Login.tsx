@@ -16,28 +16,34 @@ const Login = () => {
     handleSubmit,
     formState: { errors },
   } = useForm<TLoginInput>();
-  const navigate = useNavigate();
-  const location = useLocation();
   const dispatch = useAppDispatch();
 
   const [login, { isLoading }] = useLoginMutation();
   const [loginError, setLoginError] = useState("");
+  const navigate = useNavigate();
 
-  const from = location.state?.from?.pathname || "/dashboard";
+ const onSubmit = async (data: { email: string; password: string }) => {
+  setLoginError("");
 
-  const onSubmit = async (data: { email: string; password: string }) => {
-    setLoginError("");
+  try {
+    const res = await login(data).unwrap();
+    const { accessToken, user } = res.data;
 
-    try {
-      const res = await login(data).unwrap();
-      const { token, user } = res;
+    console.log('access',accessToken,'user',user)
 
-      dispatch(setUser({ user, token }));
-      navigate(from, { replace: true });
-    } catch (error: any) {
-      setLoginError(error?.data?.message || "Invalid email or password.");
+    dispatch(setUser({ user, token:accessToken }));
+    if (user?.role === 'ADMIN') {
+      navigate('/dashboard/allParcels');
+    } else if (user?.role === 'AGENT') {
+      navigate('/dashboard/myDeliveryList');
+    } else if (user?.role === 'CUSTOMER') {
+      navigate('/dashboard/bookParcel');
     }
-  };
+  } catch (error: any) {
+    setLoginError(error?.data?.message || "Invalid email or password.");
+  }
+};
+
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
