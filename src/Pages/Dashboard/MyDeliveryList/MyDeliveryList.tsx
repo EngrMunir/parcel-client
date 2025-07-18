@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import Swal from "sweetalert2";
 import { useAppSelector } from "../../../redux/features/hook";
 import { selectCurrentUser } from "../../../redux/features/auth/authSlice";
@@ -5,15 +6,37 @@ import {
   useGetParcelsByAgentQuery,
   useUpdateParcelStatusMutation,
 } from "../../../redux/features/parcel/parcelApi";
+import { io } from "socket.io-client";
+
+// ⚡ Initialize socket outside the component
+const socket = io("http://localhost:5000", {
+  withCredentials: true,
+});
 
 const MyDeliveryList = () => {
   const user = useAppSelector(selectCurrentUser);
 
-  const { data: deliveryListsParcels = [], isLoading } = useGetParcelsByAgentQuery(user?.id, {
+  const {
+    data: deliveryListsParcels = [],
+    isLoading,
+    refetch,
+  } = useGetParcelsByAgentQuery(user?.id, {
     skip: !user?.id,
   });
 
   const [updateParcelStatus] = useUpdateParcelStatusMutation();
+
+  // ✅ Re-fetch on socket event
+  useEffect(() => {
+    socket.on("parcelStatusUpdated", (data) => {
+      console.log("🔁 Real-time update received:", data);
+      refetch();
+    });
+
+    return () => {
+      socket.off("parcelStatusUpdated");
+    };
+  }, [refetch]);
 
   const handleStatusUpdate = async (id: string, status: string) => {
     const confirm = await Swal.fire({
