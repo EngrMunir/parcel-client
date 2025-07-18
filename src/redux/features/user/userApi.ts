@@ -40,7 +40,6 @@ export const userManagementApi = baseApi.injectEndpoints({
           method:'DELETE',
          }
       },
-      invalidatesTags:['users']
     }),
   }),
 });

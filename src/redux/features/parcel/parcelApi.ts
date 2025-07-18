@@ -19,7 +19,7 @@ const parcelManagementApi = baseApi.injectEndpoints({
         }),
         transformResponse: (response: any) => response.data,
     }),
-    
+    // checked
     getAllParcels: builder.query({
       query: () => ({
         url: "/parcels",
@@ -28,6 +28,14 @@ const parcelManagementApi = baseApi.injectEndpoints({
       transformResponse: (response: any) => ({
         data: response.data,
       }),
+    }),
+    // checked
+    getParcelsByAgent: builder.query({
+        query: (agentId: string) => ({
+        url: `/parcels/agent/${agentId}`,
+        method: "GET",
+      }),
+      transformResponse: (response: any) => response.data,
     }),
 
     getSingleParcel: builder.query({
@@ -69,9 +77,6 @@ assignAgent: builder.mutation({
         body: data,
       }),
     }),
-     getMyDeliveryList: builder.query({
-      query: (email: string) => `/myDeliveryList?email=${email}`,
-    }),
   }),
 });
 
@@ -80,11 +85,11 @@ export const {
   useGetAllParcelsQuery,
   useGetSingleParcelQuery,
   useCreateParcelMutation,
+  useGetParcelsByAgentQuery,
   useDeleteParcelMutation,
   useAssignAgentMutation,
   useCancelParcelMutation,
   useCancelDeliveryParcelMutation,
-  useGetMyDeliveryListQuery,
 } = parcelManagementApi;
 
 

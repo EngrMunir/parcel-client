@@ -98,7 +98,7 @@ const Dashboard = () => {
                 }`
               }
             >
-              All Users
+              All Customers
             </NavLink>
           </li>
         </>
