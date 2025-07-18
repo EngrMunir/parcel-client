@@ -1,78 +1,120 @@
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import useAxiosPublic from "../../hook/useAxiosPublic";
+import { useState } from "react";
+import { useRegisterMutation } from "../../redux/features/auth/authApi";
+
+type RegisterFormInputs = {
+  name: string;
+  email: string;
+  password: string;
+};
 
 const Register = () => {
-  const { register, handleSubmit, formState: { errors }, reset } = useForm();
-  const axiosPublic = useAxiosPublic();
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<RegisterFormInputs>();
+  const [registerUser] = useRegisterMutation();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-  const onSubmit = async (data) => {
-    try {
-      const registerData = {
-        name: data.name,
-        email: data.email,
-        password: data.password,
-        phoneNumber: data.mobile,
-        role: "user"
-      };
+ const onSubmit = async (data: RegisterFormInputs) => {
+  setLoading(true);
+  try {
+    const payload = {
+      name: data.name,
+      email: data.email,
+      password: data.password,
+    };
 
-      const response = await axiosPublic.post("/auth/register", registerData);
+    const response = await registerUser(payload).unwrap();
 
-      if (response.data?.id || response.data?.message === "User registered") {
-        Swal.fire({
-          position: 'center',
-          icon: 'success',
-          title: 'Registration successful!',
-          showConfirmButton: false,
-          timer: 1500
-        });
-        reset();
-        navigate("/login");
-      }
-    } catch (err) {
-      console.error("Registration failed:", err);
+    if (response?.success) {
       Swal.fire({
-        icon: 'error',
-        title: 'Oops...',
-        text: err.response?.data?.message || 'Something went wrong!'
+        position: "center",
+        icon: "success",
+        title: response.message || "Registration successful!",
+        showConfirmButton: false,
+        timer: 1500,
       });
-    }
-  };
+
+      reset();
+      navigate("/login");
+    } 
+  } catch (err: any) {
+    console.error("Registration error:", err);
+    Swal.fire({
+      icon: "error",
+      title: "Oops...",
+      text: "Registration failed. Please try again.",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
-    <div className="mx-auto md:w-1/3">
-      <h2 className="text-3xl mb-6 text-center">Please Register</h2>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <input type="text" {...register("name", { required: true })} placeholder="Your Name" className="border w-full mb-4 py-2 px-4" />
-        {errors.name && <span className="text-red-500">Name is required</span>}
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-md bg-white rounded-xl shadow-md p-8">
+        <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">
+          Create an Account
+        </h2>
 
-        <input type="text" {...register("mobile", { required: true })} placeholder="Mobile Number" className="border w-full mb-4 py-2 px-4" />
-        {errors.mobile && <span className="text-red-500">Mobile Number is required</span>}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <div>
+            <label className="block mb-1 text-sm font-medium text-gray-700">Full Name</label>
+            <input
+              type="text"
+              {...register("name", { required: "Name is required" })}
+              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-300"
+              placeholder="Your Name"
+            />
+            {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name.message}</p>}
+          </div>
+          <div>
+            <label className="block mb-1 text-sm font-medium text-gray-700">Email</label>
+            <input
+              type="email"
+              {...register("email", { required: "Email is required" })}
+              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-300"
+              placeholder="you@example.com"
+            />
+            {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>}
+          </div>
 
-        <input type="email" {...register("email", { required: true })} placeholder="Email" className="border w-full mb-4 py-2 px-4" />
-        {errors.email && <span className="text-red-500">Email is required</span>}
+          <div>
+            <label className="block mb-1 text-sm font-medium text-gray-700">Password</label>
+            <input
+              type="password"
+              {...register("password", {
+                required: "Password is required",
+                minLength: { value: 6, message: "Minimum 6 characters" },
+                pattern: {
+                  value: /(?=.*[a-z])(?=.*[A-Z])/,
+                  message: "Must include uppercase & lowercase letters"
+                }
+              })}
+              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-300"
+              placeholder="******"
+            />
+            {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>}
+          </div>
 
-        <input
-          type="password"
-          {...register("password", {
-            required: true,
-            minLength: 6,
-            pattern: /(?=.*[A-Z])(?=.*[a-z])/
-          })}
-          placeholder="Password"
-          className="border w-full mb-4 py-2 px-4"
-        />
-        {errors.password?.type === "required" && <span className="text-red-500">Password is required</span>}
-        {errors.password?.type === "minLength" && <span className="text-red-500">Minimum 6 characters required</span>}
-        {errors.password?.type === "pattern" && <span className="text-red-500">Must include uppercase & lowercase</span>}
+          <button
+            type="submit"
+            className={`w-full py-2 px-4 text-white font-semibold rounded-md transition duration-300 
+              ${loading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}
+            disabled={loading}
+          >
+            {loading ? "Registering..." : "Register"}
+          </button>
+        </form>
 
-        <input className="btn btn-secondary w-full mb-4" type="submit" value="Register" />
-      </form>
-      <p className="text-center mb-5">
-        Already registered? <Link className="text-blue-500" to="/login">Login</Link>
-      </p>
+        <p className="mt-4 text-center text-sm text-gray-600">
+          Already have an account?{" "}
+          <Link to="/login" className="text-blue-600 font-medium hover:underline">
+            Login
+          </Link>
+        </p>
+      </div>
     </div>
   );
 };

@@ -1,118 +1,110 @@
-import { useQuery } from "@tanstack/react-query";
-import useAuth from "../../../hook/useAuth";
-import useAxiosSecure from "../../../hook/useAxiosSecure";
 import { MdOutlineCancelPresentation } from "react-icons/md";
 import Swal from "sweetalert2";
+import { useAppSelector } from "../../../redux/features/hook";
+import { selectCurrentUser } from "../../../redux/features/auth/authSlice";
+import { useCancelDeliveryParcelMutation, useCancelParcelMutation, useGetMyDeliveryListQuery } from "../../../redux/features/parcel/parcelApi";
+
 
 const MyDeliveryList = () => {
-  const { user } = useAuth();
-  const axiosSecure = useAxiosSecure();
-  
-  const { data: deliveryListsParcels=[], isLoading, refetch }= useQuery({
-    queryKey:['deliveryListsParcel'],
-    queryFn: async ()=>{
-        const res = await axiosSecure.get(`/myDeliveryList?email=${user.email}`);
-        console.log(res.data)
-        return res.data;
-    }
-})
+  const { user } = useAppSelector(selectCurrentUser);
 
-
-const handleCancel=async(id)=>{
-  Swal.fire({
-    title: "Are you sure?",
-    text: "You won't be able to revert this!",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#3085d6",
-    cancelButtonColor: "#d33",
-    confirmButtonText: "Yes, delete it!"
-  }).then(async(result) => {
-    if (result.isConfirmed) {
-      const cancelInfo = {
-        parcelId: id,
-        status:'Cancelled by delivery men'
-      }
-      const res = await axiosSecure.patch('/bookParcel/cancel',cancelInfo)
-      if(res.data.modifiedCount){
-        refetch()
-        Swal.fire({
-          title: "Cancelled!",
-          text: "Your file has been canceled.",
-          icon: "success"
-        });
-      }
-    }
-  }); 
-}
-const handleDeliver=async(id)=>{
-  Swal.fire({
-    title: "Are you sure?",
-    text: "You won't be able to revert this!",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#3085d6",
-    cancelButtonColor: "#d33",
-    confirmButtonText: "Yes, Deliver it!"
-  }).then(async(result) => {
-    if (result.isConfirmed) {
-      const cancelInfo = {
-        parcelId: id,
-        status:'Delivered'
-      }
-      const res = await axiosSecure.patch('/bookParcel/cancel',cancelInfo)
-      if(res.data.modifiedCount){
-        refetch()
-        Swal.fire({
-          title: "Delivered!",
-          text: "Parcel has been delivered.",
-          icon: "success"
-        });
-      }
-    }
+  const { data: deliveryListsParcels = [], isLoading } = useGetMyDeliveryListQuery(user?.email || "", {
+    skip: !user?.email,
   });
-}
 
-    return (
-        <div>
-            <h2 className="text-center">My Delivery List</h2>
-            <div className="overflow-x-auto">
-              <table className="table">
-                {/* head */}
-                <thead>
-                  <tr>
-                    <th>Sender Name</th>
-                    <th>Receiver Name</th>
-                    <th>Sender Phone</th>
-                    <th>Requested <br /> Delivery Date</th>
-                    <th>Approximate <br /> Delivery Date</th>
-                    <th>Receiver <br />Phone Number</th>
-                    <th>Receiver <br /> Address</th>
-                    <th>View Location</th>
-                    <th>Cancel</th>
-                    <th>Deliver</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {
-                    deliveryListsParcels.map(parcel =><tr className="bg-base-200" key={parcel._id}>
-                        <td>{parcel.name}</td>
-                        <td>{parcel.receiverName}</td>
-                        <td>{parcel.phone}</td>
-                        <td>{parcel.requestedDeliveryDate}</td>
-                        <th>{parcel.approximateDeliveryDate}</th>
-                        <td>{parcel.receiverPhoneNumber}</td>
-                        <td>{parcel.receiverAddress}</td>
-                        <td>Location</td>
-                        <td><button onClick={()=>handleCancel(parcel._id)}><MdOutlineCancelPresentation className="text-3xl text-red-500"/> </button></td>
-                        <td><button onClick={()=>handleDeliver(parcel._id)}><MdOutlineCancelPresentation className="text-3xl text-red-500"/> </button></td>  
-                      </tr>)
-                }
-                </tbody>
-              </table>
-            </div>
-        </div>
-    );
+  const [cancelParcel] = useCancelParcelMutation();
+  const [deliverParcel] = useCancelDeliveryParcelMutation();
+
+  const handleCancel = async (id: string) => {
+    const confirm = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, cancel it!",
+    });
+
+    if (confirm.isConfirmed) {
+      try {
+        const res = await cancelParcel({ parcelId: id, status: "Cancelled by delivery men" }).unwrap();
+        if (res?.modifiedCount) {
+          Swal.fire("Cancelled!", "Your parcel has been cancelled.", "success");
+        }
+      } catch (err) {
+        Swal.fire("Error!", "Cancellation failed.", "error");
+      }
+    }
+  };
+
+  const handleDeliver = async (id: string) => {
+    const confirm = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, deliver it!",
+    });
+
+    if (confirm.isConfirmed) {
+      try {
+        const res = await deliverParcel({ parcelId: id, status: "Delivered" }).unwrap();
+        if (res?.modifiedCount) {
+          Swal.fire("Delivered!", "Parcel has been delivered.", "success");
+        }
+      } catch (err) {
+        Swal.fire("Error!", "Delivery failed.", "error");
+      }
+    }
+  };
+
+  return (
+    <div>
+      <h2 className="text-center text-xl font-bold my-4">My Delivery List</h2>
+      <div className="overflow-x-auto">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Sender Name</th>
+              <th>Receiver Name</th>
+              <th>Sender Phone</th>
+              <th>Requested Delivery Date</th>
+              <th>Approx. Delivery Date</th>
+              <th>Receiver Phone</th>
+              <th>Receiver Address</th>
+              <th>View Location</th>
+              <th>Cancel</th>
+              <th>Deliver</th>
+            </tr>
+          </thead>
+          <tbody>
+            {deliveryListsParcels.map((parcel: any) => (
+              <tr key={parcel._id} className="bg-base-200">
+                <td>{parcel.name}</td>
+                <td>{parcel.receiverName}</td>
+                <td>{parcel.phone}</td>
+                <td>{parcel.requestedDeliveryDate}</td>
+                <td>{parcel.approximateDeliveryDate}</td>
+                <td>{parcel.receiverPhoneNumber}</td>
+                <td>{parcel.receiverAddress}</td>
+                <td>Location</td>
+                <td>
+                  <button onClick={() => handleCancel(parcel._id)}>
+                    <MdOutlineCancelPresentation className="text-3xl text-red-500" />
+                  </button>
+                </td>
+                <td>
+                  <button onClick={() => handleDeliver(parcel._id)}>
+                    <MdOutlineCancelPresentation className="text-3xl text-green-500" />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {isLoading && <p className="text-center mt-4">Loading...</p>}
+      </div>
+    </div>
+  );
 };
 
 export default MyDeliveryList;
