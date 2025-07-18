@@ -54,13 +54,6 @@ assignAgent: builder.mutation({
     body: { agentId },
   }),
 }),
-// From userApi.ts (optional)
-getAllDeliveryMen: builder.query({
-  query: () => ({
-    url: '/users?role=AGENT',
-    method: 'GET',
-  }),
-}),
 
     cancelParcel: builder.mutation({
       query: (data) => ({
@@ -89,7 +82,6 @@ export const {
   useCreateParcelMutation,
   useDeleteParcelMutation,
   useAssignAgentMutation,
-  useGetAllDeliveryMenQuery,
   useCancelParcelMutation,
   useCancelDeliveryParcelMutation,
   useGetMyDeliveryListQuery,

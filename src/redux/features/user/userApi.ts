@@ -2,6 +2,14 @@ import { baseApi } from "../../api/baseApi";
 
 export const userManagementApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
+    
+    // checked
+    getAllAgent: builder.query({
+      query: () => ({
+      url: '/users?role=AGENT',
+      method: 'GET',
+      }),
+    }),
      getSingleUser: builder.query({
       query: (userId) => ({
         url: `/users/${userId}`,
@@ -38,6 +46,7 @@ export const userManagementApi = baseApi.injectEndpoints({
 });
 
 export const {
+  useGetAllAgentQuery,
   useGetUsersQuery,
   useGetSingleUserQuery,
   useDeleteUsersMutation,

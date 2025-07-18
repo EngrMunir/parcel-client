@@ -4,8 +4,11 @@ import Swal from 'sweetalert2';
 import { MdManageAccounts } from 'react-icons/md';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../../../redux/features/auth/authSlice';
-import { useAssignAgentMutation, useGetAllDeliveryMenQuery, useGetAllParcelsQuery } from '../../../redux/features/parcel/parcelApi';
-
+import {
+  useAssignAgentMutation,
+  useGetAllParcelsQuery,
+} from '../../../redux/features/parcel/parcelApi';
+import { useGetAllAgentQuery } from '../../../redux/features/user/userApi';
 
 const AllParcels = () => {
   const user = useSelector(selectCurrentUser);
@@ -14,11 +17,16 @@ const AllParcels = () => {
   const { data: parcelData, refetch } = useGetAllParcelsQuery(undefined);
   const allParcels = parcelData?.data || [];
 
-  const { data: deliveryMenData } = useGetAllDeliveryMenQuery(undefined);
-  const deliveryMen = deliveryMenData?.data || [];
+  const { data: agentData } = useGetAllAgentQuery(undefined);
+  const agents = agentData?.data || [];
 
   const [assignAgent] = useAssignAgentMutation();
-  const { register, handleSubmit, reset } = useForm();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm();
 
   const onSubmit = async (data: any) => {
     if (!selectedParcelId) return;
@@ -26,7 +34,7 @@ const AllParcels = () => {
     try {
       await assignAgent({
         id: selectedParcelId,
-        agentId: data.deliveryMenId,
+        agentId: data.agentId,
       }).unwrap();
 
       Swal.fire({
@@ -39,6 +47,7 @@ const AllParcels = () => {
 
       reset();
       refetch();
+      (document.getElementById('my_modal_5') as HTMLDialogElement)?.close();
     } catch (error) {
       console.error(error);
       Swal.fire('Error', 'Failed to assign agent', 'error');
@@ -46,37 +55,51 @@ const AllParcels = () => {
   };
 
   return (
-    <div>
-      <h2 className="text-3xl text-center">All Parcels</h2>
-      <div className="overflow-x-auto">
-        <table className="table">
-          <thead>
+    <div className="p-6 max-w-7xl mx-auto">
+      <h2 className="text-3xl font-bold text-center mb-6">📦 All Parcels</h2>
+
+      <div className="overflow-x-auto shadow-md rounded-lg bg-white">
+        <table className="min-w-full text-sm text-gray-800">
+          <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
             <tr>
-              <th>Sender Name</th>
-              <th>Pickup Address</th>
-              <th>Delivery Address</th>
-              <th>Size</th>
-              <th>Status</th>
-              <th>Assign</th>
+              <th className="px-4 py-3 text-left">Sender</th>
+              <th className="px-4 py-3 text-left">Pickup</th>
+              <th className="px-4 py-3 text-left">Delivery</th>
+              <th className="px-4 py-3 text-left">Size</th>
+              <th className="px-4 py-3 text-left">Status</th>
+              <th className="px-4 py-3 text-center">Assign</th>
             </tr>
           </thead>
           <tbody>
             {allParcels.map((parcel: any) => (
-              <tr key={parcel.id}>
-                <td>{parcel.sender?.name}</td>
-                <td>{parcel.pickupAddress}</td>
-                <td>{parcel.deliveryAddress}</td>
-                <td>{parcel.size}</td>
-                <td>{parcel.status}</td>
-                <td>
+              <tr key={parcel.id} className="border-t hover:bg-gray-50 transition duration-200">
+                <td className="px-4 py-2">{parcel.sender?.name || 'N/A'}</td>
+                <td className="px-4 py-2">{parcel.pickupAddress}</td>
+                <td className="px-4 py-2">{parcel.deliveryAddress}</td>
+                <td className="px-4 py-2">{parcel.size}</td>
+                <td className="px-4 py-2">
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-medium ${
+                      parcel.status === 'cancelled'
+                        ? 'bg-red-100 text-red-600'
+                        : parcel.status === 'delivered'
+                        ? 'bg-green-100 text-green-600'
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}
+                  >
+                    {parcel.status}
+                  </span>
+                </td>
+                <td className="px-4 py-2 text-center">
                   <button
-                    className="btn text-slate-400"
+                    className="text-indigo-600 hover:text-indigo-800 transition"
                     onClick={() => {
                       setSelectedParcelId(parcel.id);
-                      document.getElementById('my_modal_5')?.showModal();
+                      (document.getElementById('my_modal_5') as HTMLDialogElement)?.showModal();
                     }}
+                    title="Assign Agent"
                   >
-                    <MdManageAccounts className="text-2xl" />
+                    <MdManageAccounts className="text-xl mx-auto" />
                   </button>
                 </td>
               </tr>
@@ -89,22 +112,32 @@ const AllParcels = () => {
       <dialog id="my_modal_5" className="modal modal-bottom sm:modal-middle">
         <div className="modal-box">
           <form onSubmit={handleSubmit(onSubmit)}>
-            <h2 className="font-bold text-lg py-4">Assign Delivery Agent</h2>
-            <select {...register('deliveryMenId', { required: true })} className="select select-bordered w-full mb-4">
-              <option value="">Select Agent</option>
-              {deliveryMen.map((man: any) => (
-                <option value={man.id} key={man.id}>
-                  {man.name}
-                </option>
-              ))}
-            </select>
-            <input type="submit" value="Assign" className="btn btn-sm btn-secondary" />
+            <h3 className="text-xl font-semibold mb-4">Assign Agent</h3>
+
+            <div className="mb-4">
+              <select
+                {...register('agentId', { required: true })}
+                className="select select-bordered w-full"
+              >
+                <option value="">Select Agent</option>
+                {agents.map((agent: any) => (
+                  <option value={agent.id} key={agent.id}>
+                    {agent.name}
+                  </option>
+                ))}
+              </select>
+              {errors.agentId && (
+                <p className="text-red-500 text-sm mt-1">Please select an agent.</p>
+              )}
+            </div>
+
+            <div className="flex justify-between items-center">
+              <input type="submit" value="Assign" className="btn btn-primary" />
+              <form method="dialog">
+                <button className="btn">Close</button>
+              </form>
+            </div>
           </form>
-          <div className="modal-action">
-            <form method="dialog">
-              <button className="btn">Close</button>
-            </form>
-          </div>
         </div>
       </dialog>
     </div>
