@@ -5,14 +5,22 @@ import type { RootState } from "../features/store";
 const baseQuery = fetchBaseQuery({
     baseUrl:'http://localhost:5000/api',
     credentials:"include",
-    prepareHeaders:(headers, {getState})=>{
-        const token =  (getState() as RootState).auth?.token;
-        // console.log('token from redux',token);
-        if(token){
-            headers.set("authorization",`Bearer ${token}`);
-        }
-        return headers;
-    },
+    prepareHeaders: (headers, { getState }) => {
+  const state = getState() as RootState;
+  let token = state.auth?.token;
+
+  // Fallback if Redux is empty after refresh
+  if (!token) {
+    token = localStorage.getItem("accessToken") || undefined;
+  }
+
+  if (token) {
+    headers.set("authorization", `Bearer ${token}`);
+  }
+
+  return headers;
+},
+
 });
 
 export const baseApi = createApi({

@@ -2,6 +2,13 @@ import { baseApi } from "../../api/baseApi";
 
 export const userManagementApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
+     getSingleUser: builder.query({
+      query: (userId) => ({
+        url: `/users/${userId}`,
+        method: "GET",
+      }),
+    }),
+    
     getUsers: builder.query({
       query:()=>{
         return { url:'/users', method:'GET' }
@@ -9,14 +16,7 @@ export const userManagementApi = baseApi.injectEndpoints({
       providesTags:['users']
     }),
 
-     // Get a specific user by email
-     getSingleUser: builder.query({
-      query: (email) => ({
-        url: `/users/${email}`,
-        method: "GET",
-      }),
-      providesTags: ["user"],
-    }),
+    
 
     changeUserRole: builder.mutation({
       query:(data)=>({

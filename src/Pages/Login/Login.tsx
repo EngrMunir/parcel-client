@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useLoginMutation } from "../../redux/features/auth/authApi";
 import { setUser } from "../../redux/features/auth/authSlice";
 import { useState } from "react";
@@ -29,7 +29,7 @@ const Login = () => {
     const res = await login(data).unwrap();
     const { accessToken, user } = res.data;
 
-    console.log('access',accessToken,'user',user)
+    localStorage.setItem("accessToken", accessToken);
 
     dispatch(setUser({ user, token:accessToken }));
     if (user?.role === 'ADMIN') {

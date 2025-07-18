@@ -16,12 +16,6 @@ const authApi = baseApi.injectEndpoints({
         body: userInfo,
       }),
     }),
-    getSingleUser: builder.query({
-      query: (email) => ({
-        url: `/users/${email}`,
-        method: "GET",
-      }),
-    }),
   }),
 });
 
