@@ -9,8 +9,8 @@ import Dashboard from "../Layout/Dashboard";
 import AllUsers from "../Pages/Dashboard/AllUser/AllUsers";
 import AllParcels from "../Pages/Dashboard/AllParcels/AllParcels";
 import MyDeliveryList from "../Pages/Dashboard/MyDeliveryList/MyDeliveryList";
-import MyParcels from "../Pages/Dashboard/MyParcels/MyParcels";
 import BookAParcel from "../Pages/Dashboard/BookParcel/BookParcel";
+import CustomerParcels from "../Pages/Dashboard/CustomerParcels/CustomerParcels";
 
 export const router = createBrowserRouter([
     {
@@ -42,8 +42,8 @@ export const router = createBrowserRouter([
           element:<BookAParcel></BookAParcel>
         },
         {
-          path:'myParcels',
-          element:<MyParcels></MyParcels>
+          path:'customerParcels',
+          element:<CustomerParcels></CustomerParcels>
         },
         // agent routes
         {

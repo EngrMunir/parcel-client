@@ -2,6 +2,23 @@ import { baseApi } from "../../api/baseApi";
 
 const parcelManagementApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
+
+    // checked
+    createParcel: builder.mutation({
+      query: (parcelData) => ({
+        url: "/parcels",
+        method: "POST",
+        body: parcelData,
+      }),
+    }),
+    // checked
+    getCustomerParcels: builder.query({
+        query: () => ({
+        url: "/parcels/customer",
+        method: "GET",
+        }),
+        transformResponse: (response: any) => response.data,
+    }),
     
     getAllParcels: builder.query({
       query: () => ({
@@ -20,14 +37,6 @@ const parcelManagementApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: any) => ({
         data: response.data,
-      }),
-    }),
-
-    createParcel: builder.mutation({
-      query: (parcelData) => ({
-        url: "/parcels",
-        method: "POST",
-        body: parcelData,
       }),
     }),
 
@@ -53,9 +62,6 @@ getAllDeliveryMen: builder.query({
   }),
 }),
 
- getMyParcels: builder.query({
-      query: (email: string) => `/bookParcel?email=${email}`,
-    }),
     cancelParcel: builder.mutation({
       query: (data) => ({
         url: '/bookParcel/cancel',
@@ -77,6 +83,7 @@ getAllDeliveryMen: builder.query({
 });
 
 export const {
+  useGetCustomerParcelsQuery,
   useGetAllParcelsQuery,
   useGetSingleParcelQuery,
   useCreateParcelMutation,
@@ -86,7 +93,6 @@ export const {
   useCancelParcelMutation,
   useCancelDeliveryParcelMutation,
   useGetMyDeliveryListQuery,
-  useGetMyParcelsQuery
 } = parcelManagementApi;
 
 

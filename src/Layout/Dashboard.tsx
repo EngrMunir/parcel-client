@@ -47,7 +47,7 @@ const Dashboard = () => {
           </li>
           <li>
             <NavLink
-              to="/dashboard/myParcels"
+              to="/dashboard/customerParcels"
               className={({ isActive }) =>
                 `block px-4 py-2 rounded-md font-medium ${
                   isActive ? 'bg-orange-500 text-white' : 'text-gray-700 hover:bg-orange-100'
