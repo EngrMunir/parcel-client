@@ -11,6 +11,7 @@ const parcelManagementApi = baseApi.injectEndpoints({
         body: parcelData,
       }),
     }),
+    
     // checked
     getCustomerParcels: builder.query({
         query: () => ({
@@ -36,6 +37,15 @@ const parcelManagementApi = baseApi.injectEndpoints({
         method: "GET",
       }),
       transformResponse: (response: any) => response.data,
+    }),
+
+    // checked
+    updateParcelStatus: builder.mutation({
+        query: ({ id, status, location }) => ({
+        url: `/parcels/${id}/status`,
+        method: "PATCH",
+        body: { status, location },
+      }),
     }),
 
     getSingleParcel: builder.query({
@@ -83,6 +93,7 @@ assignAgent: builder.mutation({
 export const {
   useGetCustomerParcelsQuery,
   useGetAllParcelsQuery,
+  useUpdateParcelStatusMutation,
   useGetSingleParcelQuery,
   useCreateParcelMutation,
   useGetParcelsByAgentQuery,

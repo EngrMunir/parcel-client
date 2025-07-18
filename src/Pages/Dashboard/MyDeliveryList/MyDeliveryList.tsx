@@ -1,60 +1,35 @@
-import { MdCancelPresentation, MdCheckCircleOutline } from "react-icons/md";
 import Swal from "sweetalert2";
 import { useAppSelector } from "../../../redux/features/hook";
 import { selectCurrentUser } from "../../../redux/features/auth/authSlice";
 import {
-  useCancelDeliveryParcelMutation,
-  useCancelParcelMutation,
   useGetParcelsByAgentQuery,
+  useUpdateParcelStatusMutation,
 } from "../../../redux/features/parcel/parcelApi";
 
 const MyDeliveryList = () => {
   const user = useAppSelector(selectCurrentUser);
+
   const { data: deliveryListsParcels = [], isLoading } = useGetParcelsByAgentQuery(user?.id, {
     skip: !user?.id,
   });
 
-  const [cancelParcel] = useCancelParcelMutation();
-  const [deliverParcel] = useCancelDeliveryParcelMutation();
+  const [updateParcelStatus] = useUpdateParcelStatusMutation();
 
-  const handleCancel = async (id: string) => {
+  const handleStatusUpdate = async (id: string, status: string) => {
     const confirm = await Swal.fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
-      icon: "warning",
+      title: `Mark as ${status.replace("_", " ")}?`,
+      text: `Are you sure you want to update the status to "${status}"?`,
+      icon: "question",
       showCancelButton: true,
-      confirmButtonText: "Yes, cancel it!",
+      confirmButtonText: "Yes, update it!",
     });
 
     if (confirm.isConfirmed) {
       try {
-        const res = await cancelParcel({ parcelId: id, status: "Cancelled by delivery men" }).unwrap();
-        if (res?.modifiedCount) {
-          Swal.fire("Cancelled!", "Your parcel has been cancelled.", "success");
-        }
+        await updateParcelStatus({ id, status }).unwrap();
+        Swal.fire("Success!", `Status updated to ${status}.`, "success");
       } catch (err) {
-        Swal.fire("Error!", "Cancellation failed.", "error");
-      }
-    }
-  };
-
-  const handleDeliver = async (id: string) => {
-    const confirm = await Swal.fire({
-      title: "Are you sure?",
-      text: "Mark this parcel as delivered?",
-      icon: "info",
-      showCancelButton: true,
-      confirmButtonText: "Yes, deliver it!",
-    });
-
-    if (confirm.isConfirmed) {
-      try {
-        const res = await deliverParcel({ parcelId: id, status: "Delivered" }).unwrap();
-        if (res?.modifiedCount) {
-          Swal.fire("Delivered!", "Parcel marked as delivered.", "success");
-        }
-      } catch (err) {
-        Swal.fire("Error!", "Delivery failed.", "error");
+        Swal.fire("Error!", "Status update failed.", "error");
       }
     }
   };
@@ -96,9 +71,9 @@ const MyDeliveryList = () => {
                 <td className="p-3">
                   <span
                     className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      parcel.status === "Delivered"
+                      parcel.status === "DELIVERED"
                         ? "bg-green-100 text-green-700"
-                        : parcel.status?.includes("Cancelled")
+                        : parcel.status?.includes("CANCELLED") || parcel.status === "FAILED"
                         ? "bg-red-100 text-red-600"
                         : "bg-yellow-100 text-yellow-700"
                     }`}
@@ -106,27 +81,43 @@ const MyDeliveryList = () => {
                     {parcel.status}
                   </span>
                 </td>
-                <td className="p-3 flex gap-2 justify-center">
+                <td className="p-3 flex flex-col gap-1 items-center">
                   <button
-                    onClick={() => handleCancel(parcel.id)}
-                    title="Cancel Parcel"
-                    className="hover:text-red-600 transition"
+                    disabled={parcel.status === "PICKED_UP"}
+                    onClick={() => handleStatusUpdate(parcel.id, "PICKED_UP")}
+                    className="text-blue-500 text-xs hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <MdCancelPresentation className="text-2xl" />
+                    Picked Up
                   </button>
                   <button
-                    onClick={() => handleDeliver(parcel.id)}
-                    title="Mark as Delivered"
-                    className="hover:text-green-600 transition"
+                    disabled={parcel.status === "IN_TRANSIT"}
+                    onClick={() => handleStatusUpdate(parcel.id, "IN_TRANSIT")}
+                    className="text-yellow-600 text-xs hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <MdCheckCircleOutline className="text-2xl" />
+                    In Transit
+                  </button>
+                  <button
+                    disabled={parcel.status === "DELIVERED"}
+                    onClick={() => handleStatusUpdate(parcel.id, "DELIVERED")}
+                    className="text-green-600 text-xs hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Delivered
+                  </button>
+                  <button
+                    disabled={parcel.status === "FAILED"}
+                    onClick={() => handleStatusUpdate(parcel.id, "FAILED")}
+                    className="text-red-600 text-xs hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Failed
                   </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+
         {isLoading && <p className="text-center p-4">Loading...</p>}
+
         {!isLoading && deliveryListsParcels.length === 0 && (
           <p className="text-center p-4 text-gray-500">No deliveries found.</p>
         )}
