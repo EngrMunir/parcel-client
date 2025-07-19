@@ -1,7 +1,8 @@
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { useLoginMutation } from "../../redux/features/auth/authApi";
-import { setUser } from "../../redux/features/auth/authSlice";
+import { setCredentials } from "../../redux/features/auth/authSlice";
+
 import { useState } from "react";
 import { useAppDispatch } from "../../redux/features/hook";
 
@@ -31,7 +32,8 @@ const Login = () => {
 
     localStorage.setItem("accessToken", accessToken);
 
-    dispatch(setUser({ user, token:accessToken }));
+    dispatch(setCredentials({ user, token:accessToken }));
+
     if (user?.role === 'ADMIN') {
       navigate('/dashboard/allParcels');
     } else if (user?.role === 'AGENT') {

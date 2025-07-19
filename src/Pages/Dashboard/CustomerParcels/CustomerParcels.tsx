@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { FaEdit } from "react-icons/fa";
 import { MdOutlineCancelPresentation } from "react-icons/md";
 import Swal from "sweetalert2";
@@ -8,11 +9,50 @@ import {
   useCancelParcelMutation,
   useGetCustomerParcelsQuery,
 } from "../../../redux/features/parcel/parcelApi";
+import { io } from "socket.io-client";
+
+// ✅ Socket URL from env
+const socket = io(import.meta.env.VITE_SOCKET_URL as string, {
+  withCredentials: true,
+});
+
+// ✅ Define type
+type TParcel = {
+  id: string;
+  type: string;
+  size: string;
+  pickupAddress: string;
+  deliveryAddress: string;
+  receiverName: string;
+  paymentType: string;
+  status: "pending" | "cancelled" | "delivered" | string;
+  createdAt: string;
+};
 
 const CustomerParcels = () => {
   const user = useAppSelector(selectCurrentUser);
-  const { data: myParcels = [], isLoading, isError } = useGetCustomerParcelsQuery(user?.id);
+
+  const {
+    data: myParcels = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useGetCustomerParcelsQuery(user?.id, {
+    skip: !user?.id,
+  });
+
   const [cancelParcel] = useCancelParcelMutation();
+
+  useEffect(() => {
+    socket.on("parcelStatusUpdated", (data) => {
+      console.log("📦 Status updated (customer view):", data);
+      refetch();
+    });
+
+    return () => {
+      socket.off("parcelStatusUpdated");
+    };
+  }, [refetch]);
 
   const handleCancel = async (id: string) => {
     const confirm = await Swal.fire({
@@ -38,7 +78,9 @@ const CustomerParcels = () => {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <h2 className="text-3xl font-bold text-center mb-6">📦 My Parcels ({myParcels.length})</h2>
+      <h2 className="text-3xl font-bold text-center mb-6">
+        📦 My Parcels ({myParcels?.length ?? 0})
+      </h2>
 
       <div className="overflow-x-auto rounded-lg shadow-md bg-white">
         <table className="min-w-full text-sm text-gray-800">
@@ -54,10 +96,11 @@ const CustomerParcels = () => {
               <th className="px-4 py-3 text-left">Booked On</th>
               <th className="px-4 py-3 text-center">Edit</th>
               <th className="px-4 py-3 text-center">Cancel</th>
+              <th className="px-4 py-3 text-center">Track</th>
             </tr>
           </thead>
           <tbody>
-            {myParcels.map((parcel) => (
+            {myParcels.map((parcel: TParcel) => (
               <tr
                 key={parcel.id}
                 className="border-t hover:bg-gray-50 transition duration-200"
@@ -78,7 +121,7 @@ const CustomerParcels = () => {
                         : "bg-yellow-100 text-yellow-800"
                     }`}
                   >
-                    {parcel.status}
+                    {parcel.status.toUpperCase()}
                   </span>
                 </td>
                 <td className="px-4 py-2">
@@ -90,13 +133,27 @@ const CustomerParcels = () => {
                   </Link>
                 </td>
                 <td className="px-4 py-2 text-center">
-                  {parcel.status === "cancelled" || parcel.status === "delivered" ? (
+                  {parcel.status === "cancelled" ||
+                  parcel.status === "delivered" ? (
                     <MdOutlineCancelPresentation className="text-xl text-gray-400 cursor-not-allowed" />
                   ) : (
-                    <button onClick={() => handleCancel(parcel.id)} title="Cancel Parcel">
+                    <button
+                      onClick={() => handleCancel(parcel.id)}
+                      title="Cancel Parcel"
+                    >
                       <MdOutlineCancelPresentation className="text-xl text-red-600 hover:text-red-800" />
                     </button>
                   )}
+                </td>
+                <td className="px-4 py-2 text-center">
+                  <Link
+                    to={`/dashboard/customer/tracking/${parcel.id}`}
+                    title="Track Parcel"
+                  >
+                    <span className="text-sm text-indigo-600 hover:underline">
+                      Track
+                    </span>
+                  </Link>
                 </td>
               </tr>
             ))}

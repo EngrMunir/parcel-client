@@ -11,6 +11,7 @@ import AllParcels from "../Pages/Dashboard/AllParcels/AllParcels";
 import MyDeliveryList from "../Pages/Dashboard/MyDeliveryList/MyDeliveryList";
 import BookAParcel from "../Pages/Dashboard/BookParcel/BookParcel";
 import CustomerParcels from "../Pages/Dashboard/CustomerParcels/CustomerParcels";
+import ParcelTracking from "../Pages/Dashboard/ParcelTracking/ParcelTracking";
 
 export const router = createBrowserRouter([
     {
@@ -45,7 +46,10 @@ export const router = createBrowserRouter([
           path:'customerParcels',
           element:<CustomerParcels></CustomerParcels>
         },
-        // agent routes
+        {
+           path: 'customer/tracking/:parcelId',
+            element: <ParcelTracking />,
+        },
         {
           path:'myDeliveryList',
           element:<MyDeliveryList></MyDeliveryList>

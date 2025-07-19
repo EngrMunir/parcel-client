@@ -8,7 +8,6 @@ import {
 } from "../../../redux/features/parcel/parcelApi";
 import { io } from "socket.io-client";
 
-// ⚡ Initialize socket outside the component
 const socket = io("http://localhost:5000", {
   withCredentials: true,
 });
@@ -20,13 +19,12 @@ const MyDeliveryList = () => {
     data: deliveryListsParcels = [],
     isLoading,
     refetch,
-  } = useGetParcelsByAgentQuery(user?.id, {
+  } = useGetParcelsByAgentQuery(user?.id as string, {
     skip: !user?.id,
   });
 
   const [updateParcelStatus] = useUpdateParcelStatusMutation();
 
-  // ✅ Re-fetch on socket event
   useEffect(() => {
     socket.on("parcelStatusUpdated", (data) => {
       console.log("🔁 Real-time update received:", data);
@@ -37,6 +35,32 @@ const MyDeliveryList = () => {
       socket.off("parcelStatusUpdated");
     };
   }, [refetch]);
+
+  // Start tracking agent's live location
+  const emitLiveLocation = (parcelId: string) => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.watchPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          socket.emit("locationUpdate", {
+            parcelId,
+            latitude,
+            longitude,
+          });
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 10000,
+          timeout: 10000,
+        }
+      );
+    } else {
+      console.warn("Geolocation not supported");
+    }
+  };
 
   const handleStatusUpdate = async (id: string, status: string) => {
     const confirm = await Swal.fire({
@@ -51,6 +75,10 @@ const MyDeliveryList = () => {
       try {
         await updateParcelStatus({ id, status }).unwrap();
         Swal.fire("Success!", `Status updated to ${status}.`, "success");
+
+        if (status === "IN_TRANSIT") {
+          emitLiveLocation(id); // Start sending location
+        }
       } catch (err) {
         Swal.fire("Error!", "Status update failed.", "error");
       }

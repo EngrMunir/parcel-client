@@ -11,7 +11,7 @@ const baseQuery = fetchBaseQuery({
 
   // Fallback if Redux is empty after refresh
   if (!token) {
-    token = localStorage.getItem("accessToken") || undefined;
+    token = localStorage.getItem("accessToken") || null;
   }
 
   if (token) {

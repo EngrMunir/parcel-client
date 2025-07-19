@@ -1,32 +1,65 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import Swal from 'sweetalert2';
-import { MdManageAccounts } from 'react-icons/md';
-import { useSelector } from 'react-redux';
-import { selectCurrentUser } from '../../../redux/features/auth/authSlice';
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import Swal from "sweetalert2";
+import { MdManageAccounts } from "react-icons/md";
 import {
   useAssignAgentMutation,
   useGetAllParcelsQuery,
-} from '../../../redux/features/parcel/parcelApi';
-import { useGetAllAgentQuery } from '../../../redux/features/user/userApi';
+} from "../../../redux/features/parcel/parcelApi";
+import { useGetAllAgentQuery } from "../../../redux/features/user/userApi";
+import { io } from "socket.io-client";
+
+// Socket connection
+const socket = io("http://localhost:5000", {
+  withCredentials: true,
+});
+
+// Type definitions
+type Parcel = {
+  id: string;
+  sender?: { name?: string };
+  pickupAddress: string;
+  deliveryAddress: string;
+  size: string;
+  status: string;
+};
+
+type Agent = {
+  id: string;
+  name: string;
+};
 
 const AllParcels = () => {
-  const user = useSelector(selectCurrentUser);
   const [selectedParcelId, setSelectedParcelId] = useState<string | null>(null);
 
   const { data: parcelData, refetch } = useGetAllParcelsQuery(undefined);
-  const allParcels = parcelData?.data || [];
+  const allParcels: Parcel[] = parcelData?.data || [];
 
   const { data: agentData } = useGetAllAgentQuery(undefined);
-  const agents = agentData?.data || [];
+  const agents: Agent[] = agentData?.data || [];
 
   const [assignAgent] = useAssignAgentMutation();
+
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
   } = useForm();
+
+  // ✅ FIXED: TS error in useEffect
+  useEffect(() => {
+    const handleStatusUpdate = (data: any) => {
+      console.log("Admin noticed status update:", data);
+      refetch();
+    };
+
+    socket.on("parcelStatusUpdated", handleStatusUpdate);
+
+    return () => {
+      socket.off("parcelStatusUpdated", handleStatusUpdate);
+    };
+  }, [refetch]);
 
   const onSubmit = async (data: any) => {
     if (!selectedParcelId) return;
@@ -38,19 +71,19 @@ const AllParcels = () => {
       }).unwrap();
 
       Swal.fire({
-        position: 'top-end',
-        icon: 'success',
-        title: 'Agent assigned successfully!',
+        position: "top-end",
+        icon: "success",
+        title: "Agent assigned successfully!",
         showConfirmButton: false,
         timer: 1500,
       });
 
       reset();
       refetch();
-      (document.getElementById('my_modal_5') as HTMLDialogElement)?.close();
+      (document.getElementById("my_modal_5") as HTMLDialogElement)?.close();
     } catch (error) {
       console.error(error);
-      Swal.fire('Error', 'Failed to assign agent', 'error');
+      Swal.fire("Error", "Failed to assign agent", "error");
     }
   };
 
@@ -71,23 +104,23 @@ const AllParcels = () => {
             </tr>
           </thead>
           <tbody>
-            {allParcels.map((parcel: any) => (
+            {allParcels.map((parcel) => (
               <tr key={parcel.id} className="border-t hover:bg-gray-50 transition duration-200">
-                <td className="px-4 py-2">{parcel.sender?.name || 'N/A'}</td>
+                <td className="px-4 py-2">{parcel.sender?.name || "N/A"}</td>
                 <td className="px-4 py-2">{parcel.pickupAddress}</td>
                 <td className="px-4 py-2">{parcel.deliveryAddress}</td>
                 <td className="px-4 py-2">{parcel.size}</td>
                 <td className="px-4 py-2">
                   <span
                     className={`px-2 py-1 rounded text-xs font-medium ${
-                      parcel.status === 'cancelled'
-                        ? 'bg-red-100 text-red-600'
-                        : parcel.status === 'delivered'
-                        ? 'bg-green-100 text-green-600'
-                        : 'bg-yellow-100 text-yellow-800'
+                      parcel.status === "cancelled"
+                        ? "bg-red-100 text-red-600"
+                        : parcel.status === "delivered"
+                        ? "bg-green-100 text-green-600"
+                        : "bg-yellow-100 text-yellow-800"
                     }`}
                   >
-                    {parcel.status}
+                    {parcel.status.toUpperCase()}
                   </span>
                 </td>
                 <td className="px-4 py-2 text-center">
@@ -95,7 +128,7 @@ const AllParcels = () => {
                     className="text-indigo-600 hover:text-indigo-800 transition"
                     onClick={() => {
                       setSelectedParcelId(parcel.id);
-                      (document.getElementById('my_modal_5') as HTMLDialogElement)?.showModal();
+                      (document.getElementById("my_modal_5") as HTMLDialogElement)?.showModal();
                     }}
                     title="Assign Agent"
                   >
@@ -108,7 +141,7 @@ const AllParcels = () => {
         </table>
       </div>
 
-      {/* Modal */}
+      {/* Modal for Agent Assignment */}
       <dialog id="my_modal_5" className="modal modal-bottom sm:modal-middle">
         <div className="modal-box">
           <form onSubmit={handleSubmit(onSubmit)}>
@@ -116,11 +149,11 @@ const AllParcels = () => {
 
             <div className="mb-4">
               <select
-                {...register('agentId', { required: true })}
+                {...register("agentId", { required: true })}
                 className="select select-bordered w-full"
               >
                 <option value="">Select Agent</option>
-                {agents.map((agent: any) => (
+                {agents.map((agent) => (
                   <option value={agent.id} key={agent.id}>
                     {agent.name}
                   </option>
@@ -131,7 +164,7 @@ const AllParcels = () => {
               )}
             </div>
 
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center mt-4">
               <input type="submit" value="Assign" className="btn btn-primary" />
               <form method="dialog">
                 <button className="btn">Close</button>

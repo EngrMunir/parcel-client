@@ -4,13 +4,19 @@ import {
   useGetUsersQuery,
 } from "../../../redux/features/user/userApi";
 
+type TUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: "CUSTOMER" | "ADMIN" | "AGENT";
+};
+
 const AllUsers = () => {
   const { data: users = {}, isLoading } = useGetUsersQuery(undefined);
   const [changeUserRole] = useChangeUserRoleMutation();
 
-  const filteredUsers = users.data?.filter(
-    (user) => user.role === "CUSTOMER"
-  ) || [];
+  const filteredUsers =
+    (users.data as TUser[])?.filter((user: TUser) => user.role === "CUSTOMER") || [];
 
   const handleRoleChange = (userId: string, newRole: string) => {
     const info = { id: userId, role: newRole };
@@ -55,7 +61,7 @@ const AllUsers = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredUsers.map((user) => (
+            {filteredUsers.map((user: TUser) => (
               <tr key={user.id} className="border-t hover:bg-gray-50">
                 <td className="px-4 py-2">{user.name}</td>
                 <td className="px-4 py-2">{user.email}</td>

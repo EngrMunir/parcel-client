@@ -1,12 +1,9 @@
 import { useForm } from "react-hook-form";
 import Swal from "sweetalert2";
-import { useAppSelector } from "../../../redux/features/hook";
-import { selectCurrentUser } from "../../../redux/features/auth/authSlice";
 import { useCreateParcelMutation } from "../../../redux/features/parcel/parcelApi";
 
 const BookAParcel = () => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
-  const user = useAppSelector(selectCurrentUser);
   const [createParcel] = useCreateParcelMutation();
 
   const onSubmit = async (data: any) => {
