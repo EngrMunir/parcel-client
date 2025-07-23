@@ -77,6 +77,19 @@ const Dashboard = () => {
 
       {role === 'ADMIN' && (
         <>
+        <li>
+          <NavLink
+              to="/dashboard/analytics"
+              className={({ isActive }) =>
+              `block px-4 py-2 rounded-md font-medium ${
+              isActive ? 'bg-orange-500 text-white' : 'text-gray-700 hover:bg-orange-100'
+              }`
+            }
+          >
+            Analytics
+          </NavLink>
+          </li>
+
           <li>
             <NavLink
               to="/dashboard/allParcels"
@@ -101,6 +114,7 @@ const Dashboard = () => {
               All Customers
             </NavLink>
           </li>
+
         </>
       )}
 

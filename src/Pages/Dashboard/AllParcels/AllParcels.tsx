@@ -22,6 +22,7 @@ type Parcel = {
   deliveryAddress: string;
   size: string;
   status: string;
+  agentId?: string;
 };
 
 type Agent = {
@@ -124,17 +125,22 @@ const AllParcels = () => {
                   </span>
                 </td>
                 <td className="px-4 py-2 text-center">
-                  <button
-                    className="text-indigo-600 hover:text-indigo-800 transition"
-                    onClick={() => {
-                      setSelectedParcelId(parcel.id);
-                      (document.getElementById("my_modal_5") as HTMLDialogElement)?.showModal();
-                    }}
-                    title="Assign Agent"
-                  >
-                    <MdManageAccounts className="text-xl mx-auto" />
-                  </button>
-                </td>
+  {parcel.agentId ? (
+    <span className="text-green-600 font-semibold">Assigned</span>
+  ) : (
+    <button
+      className="text-indigo-600 hover:text-indigo-800 transition"
+      onClick={() => {
+        setSelectedParcelId(parcel.id);
+        (document.getElementById("my_modal_5") as HTMLDialogElement)?.showModal();
+      }}
+      title="Assign Agent"
+    >
+      <MdManageAccounts className="text-xl mx-auto" />
+    </button>
+  )}
+</td>
+
               </tr>
             ))}
           </tbody>

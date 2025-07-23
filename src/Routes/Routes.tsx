@@ -12,6 +12,7 @@ import MyDeliveryList from "../Pages/Dashboard/MyDeliveryList/MyDeliveryList";
 import BookAParcel from "../Pages/Dashboard/BookParcel/BookParcel";
 import CustomerParcels from "../Pages/Dashboard/CustomerParcels/CustomerParcels";
 import ParcelTracking from "../Pages/Dashboard/ParcelTracking/ParcelTracking";
+import DashboardAnalytics from "../Pages/Dashboard/Analytics/DashboardAnalytics";
 
 export const router = createBrowserRouter([
     {
@@ -64,6 +65,11 @@ export const router = createBrowserRouter([
           path:'allParcels',
           element:<AllParcels></AllParcels>
         },
+        {
+          path: "analytics",
+          element: <DashboardAnalytics />
+        }
+
       ]
     }
   ]);
